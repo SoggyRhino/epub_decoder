@@ -104,7 +104,10 @@ class Section extends Equatable {
   ArchiveFile? _initializeAudio() {
     if (!hasAudio) return null;
 
-    final audioNode = _smil!.xpath('/smil/body/seq/par/audio').first;
+    final audioNode = _smil!
+        .xpath(
+            '/*[local-name() = "smil"]/*[local-name() = "body"]/*[local-name() = "seq"]/*[local-name() = "par"]/*[local-name() = "audio"]')
+        .first;
     final audioPath = audioNode.getAttribute('src')!;
     final audioFile = _source.findFile('OEBPS/${audioPath.substring(3)}');
 

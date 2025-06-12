@@ -38,8 +38,8 @@ class SmilParallel extends Equatable {
 
   /// Creates a [SmilParallel] from a <par> xml element.
   factory SmilParallel.fromXmlElement(XmlElement xml) {
-    final audioNode = xml.xpath('audio').first;
-    final textNode = xml.xpath('text').first;
+    final audioNode = xml.xpath('*[local-name() = "audio"]').first;
+    final textNode = xml.xpath('*[local-name() = "text"]').first;
     return SmilParallel(
       id: xml.getAttribute('id')!,
       clipBegin: const Duration().fromString(

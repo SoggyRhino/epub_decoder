@@ -80,7 +80,8 @@ class Epub extends Equatable {
 
     final content = XmlDocument.parse(utf8.decode(container.content));
     final path = content.rootElement
-        .xpath('/container/rootfiles/rootfile')
+        .xpath(
+            '/*[local-name() = "container"]/*[local-name() = "rootfiles"]/*[local-name() = "rootfile"]')
         .first
         .getAttribute('full-path');
 
@@ -106,7 +107,9 @@ class Epub extends Equatable {
 
   List<Metadata> _initializeMetadata() {
     final metadata = <Metadata>[];
-    final metadataxml = _rootFileContent.xpath('/package/metadata').first;
+    final metadataxml = _rootFileContent
+        .xpath('/*[local-name() = "package"]/*[local-name() = "metadata"]')
+        .first;
 
     for (var element in metadataxml.descendantElements) {
       if (element.name.toString().startsWith('dc:')) {
@@ -145,7 +148,9 @@ class Epub extends Equatable {
 
   List<Item> _initializeItems() {
     final items = <Item>[];
-    final itemsxml = _rootFileContent.xpath('/package/manifest').first;
+    final itemsxml = _rootFileContent
+        .xpath('/*[local-name() = "package"]/*[local-name() = "manifest"]')
+        .first;
 
     for (var element in itemsxml.descendantElements) {
       final mediaOverlayId = element.getAttribute('media-overlay');
@@ -182,7 +187,9 @@ class Epub extends Equatable {
 
   List<Section> _initializeSections() {
     final sections = <Section>[];
-    final spinexml = _rootFileContent.xpath('/package/spine').first;
+    final spinexml = _rootFileContent
+        .xpath('/*[local-name() = "package"]/*[local-name() = "spine"]')
+        .first;
     final spineItems = spinexml.findAllElements('itemref');
     for (var (index, itemref) in spineItems.indexed) {
       final item = items.firstWhere(
