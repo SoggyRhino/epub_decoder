@@ -24,6 +24,8 @@ class Epub extends Equatable {
     _metadata = Lazy(_initializeMetadata);
     _items = Lazy(_initializeItems);
     _sections = Lazy(_initializeSections);
+    _rootFilePath = Lazy(_initializeRootFilePath);
+    _baseDirectory = Lazy(_initializeBaseDirectory);
   }
 
   /// Constructs an [Epub] instance from a [File].
@@ -35,6 +37,8 @@ class Epub extends Equatable {
     _metadata = Lazy(_initializeMetadata);
     _items = Lazy(_initializeItems);
     _sections = Lazy(_initializeSections);
+    _rootFilePath = Lazy(_initializeRootFilePath);
+    _baseDirectory = Lazy(_initializeBaseDirectory);
   }
 
   /// The decoded ZIP archive of the EPUB file.
@@ -43,6 +47,9 @@ class Epub extends Equatable {
   late final Lazy<List<Metadata>> _metadata;
   late final Lazy<List<Item>> _items;
   late final Lazy<List<Section>> _sections;
+  late final Lazy<String> _rootFilePath;
+  late final Lazy<String> _baseDirectory;
+
 
   String get title =>
       metadata
@@ -71,11 +78,19 @@ class Epub extends Equatable {
     return result;
   }
 
+  String get baseDirectory => _baseDirectory.value;
+
+  String _initializeBaseDirectory() {
+    return File(rootFilePath).parent.path;
+  }
+
   /// Path to the root file (usually 'content.opf') in the EPUB.
   ///
   /// Throws a [FormatException] if the container file or the root file path
   /// is not found.
-  String get _rootFilePath {
+  String get rootFilePath => _rootFilePath.value;
+
+  String  _initializeRootFilePath() {
     final container = zip.findFile(containerFilePath);
     container ?? (throw const FormatException('Container file not found.'));
 
@@ -94,7 +109,7 @@ class Epub extends Equatable {
   ///
   /// Throws a [FormatException] if the root file is not found.
   XmlDocument get _rootFileContent {
-    final file = zip.findFile(_rootFilePath);
+    final file = zip.findFile(rootFilePath);
     file ?? (throw const FormatException('Root file not found.'));
     final content = XmlDocument.parse(utf8.decode(file.content));
     return content;

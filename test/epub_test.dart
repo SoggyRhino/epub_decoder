@@ -120,4 +120,12 @@ void main() {
 
     expect(epubWithoutCover.cover, isNull);
   });
+
+  test('''Test different base directory''',(){
+    final epub3 = Epub.fromFile(File('test/resources/accessible_epub_3.epub'));
+    epub3.sections;
+    epub3.cover;
+
+    print(epub3.cover!.fileContent);
+  });
 }

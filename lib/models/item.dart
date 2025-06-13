@@ -19,7 +19,7 @@ class Item extends Equatable {
     required Epub source,
     this.mediaOverlay,
     this.properties = const [],
-  }) : _source = source.zip;
+  }) : _source = source.zip, _path = "${source.baseDirectory}/$href";
 
   /// Creates an [Item] from an XML `<item>` tag inside EPUB `<manifest>`.
   factory Item.fromXmlElement(
@@ -64,6 +64,8 @@ class Item extends Equatable {
 
   final Archive _source;
 
+  final String _path;
+
   /// Name of the represented file.
   String get fileName => href.split('/').last;
 
@@ -71,9 +73,9 @@ class Item extends Equatable {
   ///
   /// Throws an [AssertionError] if the file could not be found.
   Uint8List get fileContent {
-    final file = _source.findFile('OEBPS/$href');
+    final file = _source.findFile(_path);
     if (file == null) {
-      throw AssertionError('File in href OEBPS/$href does not exists');
+      throw AssertionError('File in href $_path does not exists');
     }
 
     return file.content;
