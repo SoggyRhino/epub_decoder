@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:collection/collection.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
 import 'package:xml/xml.dart';
@@ -154,7 +155,7 @@ class Epub extends Equatable {
 
     for (var element in itemsxml.descendantElements) {
       final mediaOverlayId = element.getAttribute('media-overlay');
-      Item item;
+      Item? item;
 
       if (mediaOverlayId != null) {
         final mediaOverlay = itemsxml.descendantElements.firstWhere(
@@ -162,18 +163,25 @@ class Epub extends Equatable {
           orElse: () => throw UnimplementedError(
               'Media overlay with id $mediaOverlayId not found or not declared.'),
         );
-        item = Item.fromXmlElement(
-          element,
-          source: this,
-          mediaOverlay: Item.fromXmlElement(mediaOverlay, source: this),
-        );
+
+        try {
+          item = Item.fromXmlElement(
+            element,
+            source: this,
+            mediaOverlay: Item.fromXmlElement(mediaOverlay, source: this),
+          );
+        } catch (e) {}
       } else {
-        item = Item.fromXmlElement(element, source: this);
+        try {
+          item = Item.fromXmlElement(element, source: this);
+        } catch (e) {}
       }
 
-      item._addRefinementsFrom(metadata);
-      item.mediaOverlay?._addRefinementsFrom(metadata);
-      items.add(item);
+      if (item  != null) {
+        item._addRefinementsFrom(metadata);
+        item.mediaOverlay?._addRefinementsFrom(metadata);
+        items.add(item);
+      }
     }
 
     return items;
@@ -192,9 +200,10 @@ class Epub extends Equatable {
         .first;
     final spineItems = spinexml.findAllElements('itemref', namespace: '*');
     for (var (index, itemref) in spineItems.indexed) {
-      final item = items.firstWhere(
+      final item = items.firstWhereOrNull(
         (item) => item.id == itemref.getAttribute('idref'),
       );
+      if (item == null)  continue;
 
       final section = Section(
         content: item,

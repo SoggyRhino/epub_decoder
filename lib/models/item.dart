@@ -94,7 +94,7 @@ extension on XmlElement{
   String _getRequiredAttribute(String attribute) {
     final value = getAttribute(attribute);
     if (value == null) {
-      throw ArgumentError('$attribute is a required attribute for xml');
+      throw FormatException('$attribute is a required attribute for xml');
     }
     return value;
   }
