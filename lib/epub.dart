@@ -50,7 +50,6 @@ class Epub extends Equatable {
   late final Lazy<String> _rootFilePath;
   late final Lazy<String> _baseDirectory;
 
-
   String get title =>
       metadata
           .firstWhere(
@@ -67,15 +66,20 @@ class Epub extends Equatable {
       .toList();
 
   Item? get cover {
-    Item? result;
-    try {
-      result = items.firstWhere(
-        (element) => element.properties.contains(ItemProperty.coverImage),
-      );
-    } on StateError {
-      result = null;
+    Item? cover = items.firstWhereOrNull(
+        (element) => element.properties.contains(ItemProperty.coverImage));
+
+    //check if cover is defined in a different way (valid in epub 2 spec)
+    if (cover == null) {
+      final coverMeta = metadata.firstWhereOrNull(
+          (element) => element is DocumentMetadata && element.name == 'cover');
+      if (coverMeta != null) {
+        cover =
+            items.firstWhereOrNull((element) => element.id == coverMeta.value);
+      }
     }
-    return result;
+
+    return cover;
   }
 
   String get baseDirectory => _baseDirectory.value;
@@ -90,7 +94,7 @@ class Epub extends Equatable {
   /// is not found.
   String get rootFilePath => _rootFilePath.value;
 
-  String  _initializeRootFilePath() {
+  String _initializeRootFilePath() {
     final container = zip.findFile(containerFilePath);
     container ?? (throw const FormatException('Container file not found.'));
 
@@ -128,13 +132,12 @@ class Epub extends Equatable {
         .first;
 
     for (var element in metadataxml.descendantElements) {
-      if (element.name.toString().startsWith('dc:')) {
-        final dcmetadata = DublinCoreMetadata.fromXmlElement(element);
-        metadata.add(dcmetadata);
+      if (element.namespacePrefix == 'dc') {
+        metadata.add(DublinCoreMetadata.fromXmlElement(element));
         continue;
       }
 
-      if (element.name.toString() == 'meta') {
+      if (element.localName.toString() == 'meta') {
         final docmetadata = DocumentMetadata.fromXmlElement(element);
 
         if (docmetadata.refinesTo == null) {
@@ -192,7 +195,7 @@ class Epub extends Equatable {
         } catch (e) {}
       }
 
-      if (item  != null) {
+      if (item != null) {
         item._addRefinementsFrom(metadata);
         item.mediaOverlay?._addRefinementsFrom(metadata);
         items.add(item);
@@ -218,7 +221,7 @@ class Epub extends Equatable {
       final item = items.firstWhereOrNull(
         (item) => item.id == itemref.getAttribute('idref'),
       );
-      if (item == null)  continue;
+      if (item == null) continue;
 
       final section = Section(
         content: item,

@@ -17,7 +17,7 @@ class DublinCoreMetadata extends Metadata {
   /// Creates a [DublinCoreMetadata] from an XML `<dc:` tag inside EPUB `<metadata>`.
   factory DublinCoreMetadata.fromXmlElement(XmlElement xml) {
     return DublinCoreMetadata(
-      key: xml.name.toString().substring(3),
+      key: xml.localName.toString(),
       value: xml.innerText,
       id: xml.getAttribute('id'),
     );

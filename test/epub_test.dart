@@ -125,4 +125,9 @@ void main() {
     final epub3 = Epub.fromFile(File('test/resources/accessible_epub_3.epub'));
     expect(epub3.cover!.fileContent, isNotEmpty);
   });
+
+  test('''Bad Itemef''', () {
+    final kbi = Epub.fromFile(File('test/resources/Keyboard_Immortal.epub'));
+    expect(kbi.cover?.fileContent, isNotEmpty);
+  });
 }
