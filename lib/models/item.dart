@@ -28,10 +28,10 @@ class Item extends Equatable {
     Item? mediaOverlay,
   }) {
     return Item(
-      id: xml.getAttribute('id')!,
+      id: xml._getRequiredAttribute('id'),
       source: source,
-      href: xml.getAttribute('href')!,
-      mediaType: ItemMediaType.fromValue(xml.getAttribute('media-type')!),
+      href: xml._getRequiredAttribute('href'),
+      mediaType: ItemMediaType.fromValue(xml._getRequiredAttribute('media-type')),
       mediaOverlay: mediaOverlay,
       properties: xml
               .getAttribute('properties')
@@ -88,4 +88,14 @@ class Item extends Equatable {
         mediaOverlay,
         refinements,
       ];
+}
+
+extension on XmlElement{
+  String _getRequiredAttribute(String attribute) {
+    final value = getAttribute(attribute);
+    if (value == null) {
+      throw ArgumentError('$attribute is a required attribute for xml');
+    }
+    return value;
+  }
 }

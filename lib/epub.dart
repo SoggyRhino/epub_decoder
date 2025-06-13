@@ -190,7 +190,7 @@ class Epub extends Equatable {
     final spinexml = _rootFileContent
         .xpath('/*[local-name() = "package"]/*[local-name() = "spine"]')
         .first;
-    final spineItems = spinexml.findAllElements('itemref');
+    final spineItems = spinexml.findAllElements('itemref', namespace: '*');
     for (var (index, itemref) in spineItems.indexed) {
       final item = items.firstWhere(
         (item) => item.id == itemref.getAttribute('idref'),

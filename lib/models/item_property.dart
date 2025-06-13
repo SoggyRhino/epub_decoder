@@ -12,6 +12,7 @@ enum ItemProperty {
   final String value;
 
   static ItemProperty fromValue(String value) {
-    return ItemProperty.values.firstWhere((item) => item.value == value);
+    return ItemProperty.values.firstWhere((item) => item.value == value,
+        orElse: () => throw ArgumentError('Invalid item property $value'));
   }
 }

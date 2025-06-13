@@ -121,7 +121,7 @@ class Section extends Equatable {
   List<SmilParallel> _initializeSmilParallels() {
     if (!hasAudio) return [];
 
-    final xmlParallels = _smil!.findAllElements('par');
+    final xmlParallels = _smil!.findAllElements('par', namespace: '*');
     final result = xmlParallels.map(SmilParallel.fromXmlElement);
 
     return result.toList();

@@ -78,7 +78,8 @@ enum ItemMediaType {
 
   /// Create [ItemMediaType] enum from its representation in XML.
   static ItemMediaType fromValue(String value) {
-    return ItemMediaType.values
-        .firstWhere((mediaType) => mediaType.value == value);
+    return ItemMediaType.values.firstWhere(
+        (mediaType) => mediaType.value == value,
+        orElse: () => throw ArgumentError('Invalid media type $value'));
   }
 }
