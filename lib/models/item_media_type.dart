@@ -69,7 +69,9 @@ enum ItemMediaType {
   mediaOverlay('application/smil+xml'),
 
   /// media-type for the Text-to-Speech (TTS) Pronunciation lexicons.
-  textToSpechPLS('application/pls+xml');
+  textToSpechPLS('application/pls+xml'),
+
+  unSupported('application/unsupported');
 
   const ItemMediaType(this.value);
 
@@ -80,6 +82,6 @@ enum ItemMediaType {
   static ItemMediaType fromValue(String value) {
     return ItemMediaType.values.firstWhere(
         (mediaType) => mediaType.value == value,
-        orElse: () => throw ArgumentError('Invalid media type $value'));
+        orElse: () => unSupported);
   }
 }

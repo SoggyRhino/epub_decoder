@@ -6,13 +6,14 @@ enum ItemProperty {
   svg('svg'),
   remoteResources('remote-resources'),
   $switch('switch'),
-  nav('nav');
+  nav('nav'),
+  unSupported('unsupported');
 
   const ItemProperty(this.value);
   final String value;
 
   static ItemProperty fromValue(String value) {
     return ItemProperty.values.firstWhere((item) => item.value == value,
-        orElse: () => throw ArgumentError('Invalid item property $value'));
+        orElse: () => unSupported);
   }
 }
