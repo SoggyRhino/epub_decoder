@@ -188,11 +188,15 @@ class Epub extends Equatable {
             source: this,
             mediaOverlay: Item.fromXmlElement(mediaOverlay, source: this),
           );
-        } catch (e) {}
+        } catch (e) {
+          print('Error parsing item with id ${element.getAttribute('id')}');
+        }
       } else {
         try {
           item = Item.fromXmlElement(element, source: this);
-        } catch (e) {}
+        } catch (e) {
+          print('Error parsing item with id ${element.getAttribute('id')}');
+        }
       }
 
       if (item != null) {
@@ -227,6 +231,7 @@ class Epub extends Equatable {
         content: item,
         source: this,
         readingOrder: index + 1,
+        linear: (itemref.getAttribute("linear") ?? "") == "yes",
       );
 
       sections.add(section);
