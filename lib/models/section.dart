@@ -17,7 +17,9 @@ class Section extends Equatable {
     required Epub source,
     required this.content,
     required this.readingOrder,
+    this.title = null,
     this.linear = true,
+    this.subSection = false,
   })  : _source = source.zip,
         assert(content.mediaType == ItemMediaType.xhtml),
         assert(content.mediaOverlay != null
@@ -35,7 +37,14 @@ class Section extends Equatable {
   /// Position relative to the other sections in the [_source].
   final int readingOrder;
 
+  /// Title of the section, may be null due to parsing method.
+  final String? title;
+
+  /// Whether the section is linear.
   final bool linear;
+
+  /// If this section is a sub-section.
+  final bool subSection;
 
   /// Source EPUB where this is from.
   final Archive _source;

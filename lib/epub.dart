@@ -24,6 +24,7 @@ class Epub extends Equatable {
     _metadata = Lazy(_initializeMetadata);
     _items = Lazy(_initializeItems);
     _sections = Lazy(_initializeSections);
+    _navigation = Lazy(_initializeNavigation);
     _rootFilePath = Lazy(_initializeRootFilePath);
     _baseDirectory = Lazy(_initializeBaseDirectory);
   }
@@ -37,6 +38,7 @@ class Epub extends Equatable {
     _metadata = Lazy(_initializeMetadata);
     _items = Lazy(_initializeItems);
     _sections = Lazy(_initializeSections);
+    _navigation = Lazy(_initializeNavigation);
     _rootFilePath = Lazy(_initializeRootFilePath);
     _baseDirectory = Lazy(_initializeBaseDirectory);
   }
@@ -47,6 +49,7 @@ class Epub extends Equatable {
   late final Lazy<List<Metadata>> _metadata;
   late final Lazy<List<Item>> _items;
   late final Lazy<List<Section>> _sections;
+  late final Lazy<List<Section>> _navigation;
   late final Lazy<String> _rootFilePath;
   late final Lazy<String> _baseDirectory;
 
@@ -238,6 +241,135 @@ class Epub extends Equatable {
     }
 
     return sections;
+  }
+
+  List<Section> get navigation => _navigation.value;
+
+  /// Sections will be parsed in the following order:
+  ///  - Navigation document (epub 3.0)
+  ///  - NCX Toc (epub 2.0)
+  ///  - Spine skipping nonlinear and navigation sections (final option)
+  List<Section> _initializeNavigation() {
+    final hrefMap =
+        items.asMap().map((key, value) => MapEntry(value.href, value));
+
+    // Attempt 1 - navigation document
+    final nav = items
+        .skipWhile((item) => !item.properties.contains(ItemProperty.nav))
+        .map((item) => XmlDocument.parse(utf8.decode(item.fileContent)))
+        .map((document) =>
+            document.xpath('/*[local-name() = "nav"]').firstOrNull)
+        .nonNulls
+        .firstWhereOrNull((nav) => nav.getAttribute('epub:type') == 'toc');
+
+    if (nav != null) {
+      final sections = <Section>[];
+
+      int readingOrder = 1;
+
+      final lists = nav.findAllElements('li');
+
+      for (final list in lists) {
+        final link = list.findElements('a').first;
+        final href = link.getAttribute('href');
+
+        if (href == null) continue;
+        final title = link.innerText;
+
+        final item = hrefMap[href]!;
+
+        final section = Section(
+          content: item,
+          source: this,
+          readingOrder: readingOrder++,
+          title: title,
+          subSection: false,
+        );
+
+        sections.add(section);
+
+        for (final subSection in list.findElements('a').skip(1)) {
+          final subSectionHref = subSection.getAttribute('href');
+          final subSectionTitle = subSection.innerText;
+
+          if (subSectionHref == null || subSectionHref.contains('#')) {
+            continue;
+          }
+
+          final subSectionItem = hrefMap[subSectionHref]!;
+
+          final section = Section(
+            content: subSectionItem,
+            source: this,
+            readingOrder: readingOrder++,
+            title: subSectionTitle,
+            subSection: true,
+          );
+          sections.add(section);
+        }
+      }
+      return sections;
+    }
+
+    //Attempt 2 - separate toc document (epub 2 spec)
+    final toc = _rootFileContent
+        .xpath('/*[local-name() = "package"]/*[local-name() = "spine"]')
+        .firstOrNull
+        ?.getAttribute('toc');
+
+    if (toc != null) {
+      final item = items.firstWhereOrNull((item) => item.id == toc);
+
+      if (item != null) {
+        final document = XmlDocument.parse(utf8.decode(item.fileContent));
+        final sections = <Section>[];
+
+        int readingOrder = 1;
+
+        final navMap = document.findAllElements('navMap').firstOrNull;
+        if (navMap != null) {
+          final navPoints = navMap.findElements('navPoint');
+
+          for (final navPoint in navPoints) {
+            final navLabel = navPoint.findElements('navLabel').firstOrNull;
+            final content = navPoint.findElements('content').firstOrNull;
+
+            if (navLabel != null && content != null) {
+              final title = navLabel.findElements('text').first.innerText;
+              final src = content.getAttribute('src');
+
+              if (src != null) {
+                final item = hrefMap[src.split('#').first];
+                if (item != null) {
+                  final section = Section(
+                    content: item,
+                    source: this,
+                    readingOrder: readingOrder++,
+                    title: title,
+                  );
+                  sections.add(section);
+                }
+              }
+            }
+          }
+        }
+
+        return sections;
+      }
+    }
+
+    // Final option: skip nonlinear and navigation sections of the spine
+    return sections
+        .skipWhile(
+            (section) => section.content.properties.contains(ItemProperty.nav))
+        .skipWhile((section) => !section.linear)
+        .toList()
+        .indexed
+        .map((entry) => Section(
+            content: entry.$2.content,
+            source: this,
+            readingOrder: entry.$1 + 1))
+        .toList();
   }
 
   /// The list of properties that are used to determine whether two instances are equal.
