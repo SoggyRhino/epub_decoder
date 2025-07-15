@@ -127,10 +127,9 @@ void main() {
   });
 
   test('''Bad Itemef''', () {
-    final kbi = Epub.fromFile(File('test/resources/Keyboard_Immortal.epub'));
-    kbi.navigation.forEach((element) {
-      print(element.title);
-    });
+    final fa =
+        Epub.fromFile(File('test/resources/Fundamental-Accessibility.epub'));
+    expect(fa.navigation, isNotEmpty);
   });
 
 }

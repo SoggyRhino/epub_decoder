@@ -234,7 +234,7 @@ class Epub extends Equatable {
         content: item,
         source: this,
         readingOrder: index + 1,
-        linear: (itemref.getAttribute("linear") ?? "") == "yes",
+        linear: (itemref.getAttribute("linear") ?? "yes") == "yes",
       );
 
       sections.add(section);
@@ -258,7 +258,9 @@ class Epub extends Equatable {
         .skipWhile((item) => !item.properties.contains(ItemProperty.nav))
         .map((item) => XmlDocument.parse(utf8.decode(item.fileContent)))
         .map((document) =>
-            document.xpath('/*[local-name() = "nav"]').firstOrNull)
+    document
+        .findAllElements('nav')
+        .firstOrNull)
         .nonNulls
         .firstWhereOrNull((nav) => nav.getAttribute('epub:type') == 'toc');
 
@@ -274,15 +276,20 @@ class Epub extends Equatable {
         final href = link.getAttribute('href');
 
         if (href == null) continue;
-        final title = link.innerText;
 
-        final item = hrefMap[href]!;
+        var item = hrefMap[href];
+        if (item == null) {
+          item = hrefMap.entries
+              .firstWhereOrNull((entry) => entry.key.endsWith(href))
+              ?.value;
+          if (item == null) continue;
+        }
 
         final section = Section(
           content: item,
           source: this,
           readingOrder: readingOrder++,
-          title: title,
+          title: link.innerText,
           subSection: false,
         );
 
